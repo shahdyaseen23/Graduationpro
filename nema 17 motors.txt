@@ -1,0 +1,74 @@
+int IN1_1 = 22, IN2_1 = 23, IN3_1 = 24, IN4_1 = 25;
+int IN1_2 = 26, IN2_2 = 27, IN3_2 = 28, IN4_2 = 29;
+int IN1_3 = 30, IN2_3 = 31, IN3_3 = 32, IN4_3 = 33;
+
+// المتغيرات للتحكم في خطوات المحركات
+int step_number_1 = 0, step_number_2 = 0, step_number_3 = 0;
+
+const int steps_per_revolution = 200; // عدد الخطوات لكل دورة كاملة
+
+// تعريف نمط الخطوات للتحكم في المحركات
+const int steps[4][4] = {
+  {HIGH, LOW, HIGH, LOW},
+  {LOW, HIGH, HIGH, LOW},
+  {LOW, HIGH, LOW, HIGH},
+  {HIGH, LOW, LOW, HIGH}
+};
+
+void setup() {
+  // تهيئة دبابيس الإخراج لكل محرك
+  pinMode(IN1_1, OUTPUT); pinMode(IN2_1, OUTPUT); pinMode(IN3_1, OUTPUT); pinMode(IN4_1, OUTPUT);
+  pinMode(IN1_2, OUTPUT); pinMode(IN2_2, OUTPUT); pinMode(IN3_2, OUTPUT); pinMode(IN4_2, OUTPUT);
+  pinMode(IN1_3, OUTPUT); pinMode(IN2_3, OUTPUT); pinMode(IN3_3, OUTPUT); pinMode(IN4_3, OUTPUT);
+}
+
+void loop() {
+  // تشغيل المحرك الأول
+  rotateMotor(IN1_1, IN2_1, IN3_1, IN4_1, &step_number_1);
+  delay(2000); // الانتظار ثانيتين
+
+  // تشغيل المحرك الثاني
+  rotateMotor(IN1_2, IN2_2, IN3_2, IN4_2, &step_number_2);
+  delay(2000); // الانتظار ثانيتين
+
+  // تشغيل المحرك الثالث
+  rotateMotor(IN1_3, IN2_3, IN3_3, IN4_3, &step_number_3);
+  delay(2000); // الانتظار ثانيتين
+}
+
+// دالة لتحريك محرك لفة كاملة ثم العودة لمكانه الأصلي
+void rotateMotor(int IN1, int IN2, int IN3, int IN4, int* step_number) {
+  // لفة كاملة للأمام
+  for (int i = 0; i < steps_per_revolution; i++) {
+    stepMotor(IN1, IN2, IN3, IN4, true, step_number);
+    delay(5); // التحكم في السرعة
+  }
+
+  delay(500); // فاصل زمني قصير قبل العودة للخلف
+
+  // لفة كاملة للخلف (للعودة إلى المكان الأصلي)
+  for (int i = 0; i < steps_per_revolution; i++) {
+    stepMotor(IN1, IN2, IN3, IN4, false, step_number);
+    delay(5); // التحكم في السرعة
+  }
+}
+
+// دالة لتحريك محرك خطوة واحدة
+void stepMotor(int IN1, int IN2, int IN3, int IN4, bool forward, int* step_number) {
+  int step_index = *step_number;
+
+  if (forward) {
+    step_index++;
+    if (step_index > 3) step_index = 0;
+  } else {
+    step_index--;
+    if (step_index < 0) step_index = 3;
+  }
+
+  digitalWrite(IN1, steps[step_index][0]);
+  digitalWrite(IN2, steps[step_index][1]);
+  digitalWrite(IN3, steps[step_index][2]);
+  digitalWrite(IN4, steps[step_index][3]);
+
+  *step_number = step_index;
+}

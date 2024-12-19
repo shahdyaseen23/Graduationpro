@@ -1,0 +1,14 @@
+const int relayPin = 8;    // مدخل الريلاي
+
+void setup() {
+  pinMode(relayPin, OUTPUT);  // إعداد الريلاي كمخرج
+  digitalWrite(relayPin, LOW); // تأكد أن الريلاي مغلق في البداية
+}
+
+void loop() {
+  digitalWrite(relayPin, HIGH); // تشغيل الريلاي
+  delay(5000); // تشغيل لمدة 5 ثوانٍ (5000 ميلي ثانية)
+  
+  digitalWrite(relayPin, LOW); // إطفاء الريلاي
+  delay(3000); // إطفاء لمدة 3 ثوانٍ (3000 ميلي ثانية)
+}

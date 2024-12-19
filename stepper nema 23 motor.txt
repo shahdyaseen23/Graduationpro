@@ -1,0 +1,129 @@
+#include <AccelStepper.h>
+
+// تعريف دبابيس محرك القرص
+const int dirPin = 9;
+const int stepPin = 10;
+const int enPin = 11;
+
+// تعريف دبابيس المحركات الأربعة
+int IN1_1 = 22, IN2_1 = 23, IN3_1 = 24, IN4_1 = 25;
+int IN1_2 = 26, IN2_2 = 27, IN3_2 = 28, IN4_2 = 29;
+int IN1_3 = 30, IN2_3 = 31, IN3_3 = 32, IN4_3 = 33;
+
+int step_number_1 = 0, step_number_2 = 0, step_number_3 = 0; // خطوات المحركات
+const int steps_per_revolution = 200;
+
+// نمط تشغيل المحركات
+const int steps[4][4] = {
+  {HIGH, LOW, HIGH, LOW},
+  {LOW, HIGH, HIGH, LOW},
+  {LOW, HIGH, LOW, HIGH},
+  {HIGH, LOW, LOW, HIGH}
+};
+
+// إنشاء محرك القرص
+AccelStepper stepper(AccelStepper::DRIVER, stepPin, dirPin);
+
+void setup() {
+  // إعداد دبابيس محرك القرص
+  pinMode(enPin, OUTPUT);
+  digitalWrite(enPin, LOW);
+
+  // إعداد دبابيس المحركات
+  setupMotors();
+
+  // إعداد سرعة محرك القرص
+  stepper.setMaxSpeed(500);
+  stepper.setAcceleration(500);
+
+  Serial.begin(9600); // للتصحيح
+
+  // -------- الموضع الأول --------
+  Serial.println("الوصول إلى الموضع الأول...");
+  rotateMotors(steps_per_revolution, true, 1); // تشغيل المحرك الأول
+  delay(1000);
+
+  // -------- الموضع الثاني --------
+  Serial.println("الانتقال إلى الموضع الثاني...");
+  stepper.moveTo(1100); // مسافة الموضع الثاني
+  stepper.runToPosition();
+  rotateMotors(steps_per_revolution, true, 2); // تشغيل المحرك الثاني
+  delay(1000);
+
+  // -------- الموضع الثالث --------
+  Serial.println("الانتقال إلى الموضع الثالث...");
+  stepper.moveTo(2200); // عدّل هنا المسافة بناءً على الحاجة
+  stepper.runToPosition();
+
+  if (stepper.distanceToGo() == 0) {
+    Serial.println("الوصول إلى الموضع الثالث...");
+    rotateMotors(steps_per_revolution, true, 3); // تشغيل المحرك الثالث
+  } else {
+    Serial.println("خطأ: لم يصل القرص إلى الموضع الثالث!");
+  }
+
+  delay(1000);
+
+  // -------- العودة إلى الموضع الأصلي --------
+  Serial.println("العودة إلى الموضع الأصلي...");
+  stepper.moveTo(0); // العودة إلى النقطة الأصلية
+  stepper.runToPosition();
+
+  if (stepper.currentPosition() == 0) {
+    Serial.println("تم العودة إلى الموضع الأصلي بنجاح.");
+  } else {
+    Serial.println("خطأ أثناء العودة إلى الموضع الأصلي!");
+  }
+
+  while (true); // إنهاء البرنامج
+}
+
+void loop() {
+  // فارغة لأننا نتحكم بكل شيء في setup()
+}
+
+// ---------------- الدوال ----------------
+
+// إعداد دبابيس المحركات
+void setupMotors() {
+  pinMode(IN1_1, OUTPUT); pinMode(IN2_1, OUTPUT); pinMode(IN3_1, OUTPUT); pinMode(IN4_1, OUTPUT);
+  pinMode(IN1_2, OUTPUT); pinMode(IN2_2, OUTPUT); pinMode(IN3_2, OUTPUT); pinMode(IN4_2, OUTPUT);
+  pinMode(IN1_3, OUTPUT); pinMode(IN2_3, OUTPUT); pinMode(IN3_3, OUTPUT); pinMode(IN4_3, OUTPUT);
+}
+
+// دالة لتشغيل محرك معين
+void rotateMotors(int steps, bool forward, int motorNumber) {
+  for (int i = 0; i < steps; i++) {
+    switch (motorNumber) {
+      case 1:
+        stepMotor(IN1_1, IN2_1, IN3_1, IN4_1, forward, &step_number_1);
+        break;
+      case 2:
+        stepMotor(IN1_2, IN2_2, IN3_2, IN4_2, forward, &step_number_2);
+        break;
+      case 3:
+        stepMotor(IN1_3, IN2_3, IN3_3, IN4_3, forward, &step_number_3);
+        break;
+    }
+    delay(20); // التحكم في السرعة
+  }
+}
+
+// تحريك خطوة واحدة للمحرك
+void stepMotor(int IN1, int IN2, int IN3, int IN4, bool forward, int* step_number) {
+  int step_index = *step_number;
+  if (!forward) {
+    step_index--;
+    if (step_index < 0) step_index = 3;
+  } else {
+    step_index++;
+    if (step_index > 3) step_index = 0;
+  }
+
+  digitalWrite(IN1, steps[step_index][0]);
+  digitalWrite(IN2, steps[step_index][1]);
+  digitalWrite(IN3, steps[step_index][2]);
+  digitalWrite(IN4, steps[step_index][3]);
+
+  *step_number = step_index;
+}
